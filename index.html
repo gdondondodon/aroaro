@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>アロカスわからせ</title>
+  
+  <style>
+    .center {
+  text-align: center;
+  }
+  body {
+  max-width: 600px;   /* 中央に置く幅 */
+  margin: 0 auto;     /* 横方向の中央寄せ */
+  padding: 20px;      /* 画面端と少し余白を作る */
+  box-sizing: border-box;
+  }
+
+  /* 共通のデザイン */
+  input, select, textarea {
+    width: 100%;
+    padding: 10px;
+    font-size: 16px;
+  }
+
+  textarea {
+    min-height: 120px;
+  }
+
+  #customBox {
+    margin-top: 10px;
+  }
+  
+  /* スマホ */
+  @media (max-width: 599px) {
+  input, select, textarea {
+    font-size: 14px;
+    padding: 8px;
+  }
+
+  #insertChoice {
+    width: 100%;
+  }
+
+  #customInsert {
+    width: 100%;
+   }
+  }
+
+  /* タブレット */
+  @media (min-width: 600px) and (max-width: 900px) {
+  input, select, textarea {
+    font-size: 16px;
+    padding: 10px;
+    }
+  }
+
+  /* PC */
+  @media (min-width: 900px) {
+    body {
+    max-width: 600px;
+    margin: 0 auto;    /* 画面の中央に寄せる */
+    }
+
+    input, select, textarea {
+    font-size: 18px;
+    padding: 12px;
+    }
+
+    #customBox {
+    max-width: 400px;
+    }
+  }
+
+  button {
+    padding: 8px 14px;
+    font-size: 16px;
+    border-radius: 6px;
+    border: none;
+    background-color: #5e5e5e;
+    color: white;
+    cursor: pointer;
+  }
+
+  button:hover {
+  background-color: #666;
+  }
+
+  @media (max-width: 600px) {
+    button {
+    padding: 7px 12px;
+    font-size: 15px;
+   }
+  }
+
+  @media (min-width: 900px) {
+  button {
+    padding: 9px 16px;
+    font-size: 17px;
+    }
+  }
+
+  #insertArea {
+  display: flex;
+  align-items: center;     /* 縦位置そろえる */
+  gap: 10px;               /* すき間 */
+  margin-bottom: 10px;
+  }
+
+  /* ★ select を短くする */
+  #insertChoice {
+  width: 120px;            /* ← 好きな幅に変えられる */
+  padding: 6px;
+  font-size: 14px;
+  }
+
+  /* 説明文のスタイル */
+  .insertExplain {
+  font-size: 14px;
+  color: #555;
+  }
+
+
+ </style>
+
+</head>
+<body>
+
+
+
+  <h1 class="center">アロカスわからせ</h1>
+
+  <h3></h3>
+  <textarea id="inputText" placeholder="ここに文章を入力"></textarea>
+
+  <br>
+  <div id="insertArea">
+  <select id="insertChoice">
+    <option value=" ">半角スペース</option>
+    <option value="/">スラッシュ</option>
+    <option value="custom">カスタム</option>
+  </select>
+  <span class="insertExplain">挿入する文字を選択</span>
+  </div>
+
+  <div id="customBox" style="display: none;">
+    <input type="text" id="customInsert" placeholder="挿入する文字を入力"/>
+  </div>
+
+  <button id="clear">消す</button>
+
+  <h3></h3>
+  <textarea id="outputText" placeholder="ここに結果を出力"></textarea>
+  <br>
+  <button id="copy">コピー</button>
+</body>
+</html>
+
+
+<script>
+
+  //読み取り準備
+  const outputText = document.getElementById("outputText");
+  const clearButton = document.getElementById("clear");
+  const copyButton = document.getElementById("copy");
+
+
+  //伏せ字セット、変換文字数
+  const arokasu = [
+  "しな", "さんか", "れず", 
+  "らち", "くそ", "ばか", 
+  "花粉", "公式", "お知らせ", 
+  "サービス", "本番", "GM", 
+  "69", "6G", "えた", 
+  "訳あり", "たいま", "人権",
+  "そうか", "しね", "合法",
+  "稼", "矯正"
+  ];
+
+  const number = [
+  "1", "2", "1", 
+  "1", "1", "1", 
+  "1", "1", "2", 
+  "1", "1", "1", 
+  "1", "1", "1", 
+  "1", "1", "1",
+  "2", "1", "1",
+  "1", "1"
+  ];
+
+  //漢字対応
+  const charFrom = ["死", "相殺"];      
+  const charTo   = ["シ", "ソウサイ"];
+
+  //カスタム枠表示
+  const select = document.getElementById("insertChoice");
+  const customBox = document.getElementById("customBox");
+  select.addEventListener("change", () => {
+  if (select.value === "custom") {
+    customBox.style.display = "block";  // 表示
+   } 
+  else {
+    customBox.style.display = "none";   // 非表示
+  }
+
+  updateOutput(); // 変更を反映させる
+});
+
+
+  
+  //関数作成
+  //ひらがな->カタカナ関数
+  function hTok(str){
+    return str.replace(/[\u3041-\u3096]/g, function(ch){
+      return String.fromCharCode(ch.charCodeAt(0) + 0x60);
+    });
+  }
+
+  //カスタム挿入文字
+  function getUserInsert(){
+    const select = document.getElementById("insertChoice");
+    const custom = document.getElementById("customInsert");
+
+    if (select.value === "custom") {
+      return custom.value;
+    }
+    else{
+      return select.value;
+    }
+  }
+
+  //漢字変換
+  function applyCharReplace(str) {
+  for (let i = 0; i < charFrom.length; i++) {
+    const from = charFrom[i];   // 1文字
+    const to   = charTo[i];     // 置き換える文字列
+    str = str.split(from).join(to);
+    }
+    return str;
+  }
+
+
+  //挿入関数
+  function insertAt(str, pos, insertStr) {
+    return str.slice(0, pos) + insertStr + str.slice(pos);
+  }
+
+  //処理関数
+  function applyRuleOnce(str, aro, num, ins){
+    //カタカナ化
+    let norm = hTok(str);
+    const arok = hTok(aro);
+    const pos = Number(num); //数値化
+
+    //ループ
+    let start = 0;
+    while (true){
+      const idx = norm.indexOf(arok, start)
+      if (idx === -1) break;
+
+      const insertPos = idx + pos; //aroのnum番目
+
+      str = insertAt(str, insertPos, ins); //元の文
+      norm = insertAt(norm, insertPos, ins); //判定用
+      start = insertPos + ins.length
+    }
+
+    return str;
+  }
+
+
+  //変換処理関数
+  function updateOutput() {
+    let raw = inputText.value;
+    raw = applyCharReplace(raw);
+    const userInsert = getUserInsert();
+
+    for(let i = 0; i <arokasu.length; i++){
+      const aro = arokasu[i];
+      const num = number[i];
+      raw = applyRuleOnce(raw, aro, num, userInsert);
+    }
+
+    //結果出力
+    outputText.value = raw;
+  };
+
+  //入力時変更
+  inputText.addEventListener("input", () => {
+    updateOutput();
+  });
+
+  //選択肢変更
+  const insertChoice = document.getElementById("insertChoice");
+  insertChoice.addEventListener("change", () => {
+    updateOutput();
+  });
+
+   //カスタム挿入変更
+  customInsert.addEventListener("input", updateOutput);
+  document.getElementById("customInsert").addEventListener("input", updateOutput);
+
+
+
+  //コピーボタン
+  copyButton.addEventListener("click", () => {
+    navigator.clipboard.writeText(outputText.value);
+  })
+   
+
+  //デリートボタン
+  clearButton.addEventListener("click", () => {
+   inputText.value = "";
+   outputText.value = "";
+   });
+
+
+</script>
