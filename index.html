@@ -222,6 +222,14 @@
   "1",
   ];
 
+  // 隠しテキスト
+  const specialInput = [
+    "アリス"
+  ];
+
+  const specialOutput = [
+    "光よ──!",
+  ];
 
 
   // 熟語置換
@@ -350,12 +358,33 @@
     return false;
   }
 
+  //隠しテキスト判定
+  function applySpecialMapping(inputStr) {
+    const s = normalizeForCheck(inputStr);
+
+    for (let i = 0; i < specialInput.length; i++) {
+      if (s === normalizeForCheck(specialInput[i])) {
+        return (specialOutput[i ?? null]);
+      }
+    }
+    return null;
+  }
+
+
   //変換処理関数
   function updateOutput() {
     let raw = inputText.value;
     raw = applyCharReplace(raw);
     const userInsert = getUserInsert();
 
+    // 隠し出力
+    const special = applySpecialMapping(userInsert);
+      if (special !== null) {
+        outputText.value = special;
+        return;
+      }
+
+      //伏せ字矛盾
       if (isInsertNg(userInsert)) {
         outputText.value = "ちょっと！伏せ字させられる言葉が入ってるじゃない！\nエッチなのはダメ！死刑！";
         return;
