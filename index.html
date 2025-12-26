@@ -174,7 +174,7 @@
   "69", "6G", "えた", 
   "訳あり", "たいま", "人権",
   "そうか", "しね", "合法",
-  "稼", "矯正", "警察",
+  "社員", "矯正", "警察",
   "えっち", "にだ", "くすこ",
   "とさつ","アカウント", "しゃし",
   "げす", "かす", "挿入",
@@ -185,7 +185,13 @@
   "テロ", "糖質", "ツール",
   "ぼけ", "スタッフ", "セガ",
   "デブ", "ハック", "チート",
-  "独立", "はだか"
+  "独立", "はだか", "殺す",
+  "殺し", "殺さ", "殺せ",
+  "殺そ", "ころす", "ころし", 
+  "ころさ", "ころせ", "ころそ",
+  "稼ぐ", "稼ぎ", "稼が", 
+  "稼げ", "稼ご", "であい",
+  "出会"
   ];
 
   const number = [
@@ -207,12 +213,29 @@
   "1", "1", "1",
   "1", "1", "1",
   "1", "1", "2",
-  "1", "1"
+  "1", "1", "1", 
+  "1", "1", "1", 
+  "1", "1", "1", 
+  "1", "1", "1",
+  "1", "1", "1", 
+  "1", "1", "1",
+  "1",
   ];
 
-  //漢字対応
-  const charFrom = ["死", "全裸", "半裸", "裸眼", "舐", "痴"];      
-  const charTo   = ["タヒ", "全ラ", "半ラ", "ラ眼", "ナ", "チ"];
+  //漢字単体対応
+  const charFrom = ["死", "舐", "痴", "裸","淫"];      
+  const charTo   = ["タヒ", "ナ", "チ", "ハダカ", "イン"];
+
+  // 熟語置換
+  const jukugoFrom = [
+    "裸足", "全裸", "半裸", "裸体", "裸眼", "赤裸々", "赤裸裸", "素っ裸", "素裸", "真っ裸", "真裸",
+    "淫ら", "淫ラ"
+  ];
+  const jukugoTo   = [
+    "ハダシ", "全ラ", "半ラ", "ラ体", "ラ眼", "赤ラ々", "赤ララ", "すっぱだか", "すっぱだか", "まっぱだか", "まっぱだか",
+    "みだら", "ミダラ"
+    ];
+
 
   //カスタム枠表示
   const select = document.getElementById("insertChoice");
@@ -253,11 +276,23 @@
 
   //漢字変換
   function applyCharReplace(str) {
-  for (let i = 0; i < charFrom.length; i++) {
-    const from = charFrom[i];   // 1文字
-    const to   = charTo[i];     // 置き換える文字列
-    str = str.split(from).join(to);
+
+  // ① 熟語を先に置換（長い順にするのが安全）
+    const pairs = jukugoFrom
+      .map((f, i) => [f, jukugoTo[i]])
+      .sort((a,b) => b[0].length - a[0].length);
+
+    for (const [from, to] of pairs) {
+      str = str.split(from).join(to);
     }
+
+  // ② 単体（既存の charFrom/charTo）
+    for (let i = 0; i < charFrom.length; i++) {
+      const from = charFrom[i];
+      const to   = charTo[i];
+      str = str.split(from).join(to);
+    }
+
     return str;
   }
 
