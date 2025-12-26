@@ -222,9 +222,7 @@
   "1",
   ];
 
-  //漢字単体対応
-  const charFrom = ["死", "舐", "痴", "裸","淫"];      
-  const charTo   = ["タヒ", "ナ", "チ", "ハダカ", "イン"];
+
 
   // 熟語置換
   const jukugoFrom = [
@@ -234,7 +232,11 @@
   const jukugoTo   = [
     "ハダシ", "全ラ", "半ラ", "ラ体", "ラ眼", "赤ラ々", "赤ララ", "すっぱだか", "すっぱだか", "まっぱだか", "まっぱだか",
     "みだら", "ミダラ"
-    ];
+  ];
+
+  //熟語変換後の単体対応
+  const charFrom = ["死", "舐", "痴", "裸","淫"];      
+  const charTo   = ["タヒ", "ナ", "チ", "ハダカ", "イン"];
 
 
   //カスタム枠表示
@@ -254,11 +256,17 @@
 
   
   //関数作成
+
   //ひらがな->カタカナ関数
   function hTok(str){
     return str.replace(/[\u3041-\u3096]/g, function(ch){
       return String.fromCharCode(ch.charCodeAt(0) + 0x60);
     });
+  }
+
+  //正規化
+  function normalizeForCheck(s) {
+    return hTok(String(s || "")).toLowerCase();
   }
 
   //カスタム挿入文字
@@ -325,12 +333,33 @@
     return str;
   }
 
+  //挿入NG判定
+  function isInsertNg(insertStr) {
+    const ins = normalizeForCheck(insertStr);
+    if (ins.length === 0) return false;
+    const keys = [
+      ...arokasu,
+      ...(typeof jukugoFrom !== "undefined" ? jukugoFrom : []),
+      ...charFrom
+    ];
+
+    for (const k of keys) {
+      const key = normalizeForCheck(k);
+      if (key && ins.includes(key)) return true;
+    }
+    return false;
+  }
 
   //変換処理関数
   function updateOutput() {
     let raw = inputText.value;
     raw = applyCharReplace(raw);
     const userInsert = getUserInsert();
+
+      if (isInsertNg(userInsert)) {
+        outputText.value = "ちょっと！伏せ字させられる言葉が入ってるじゃない！\nエッチなのはダメ！死刑！";
+        return;
+      }
 
     for(let i = 0; i <arokasu.length; i++){
       const aro = arokasu[i];
